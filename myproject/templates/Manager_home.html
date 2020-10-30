@@ -4,17 +4,15 @@
 <a href="{% url 'logout' %}">Log out</a> 
 </h1>
 
-<form id="post_form" method="post" action="" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% for hidden in postForm.hidden_fields %}
-        {{ hidden }}
-    {% endfor %}
-    {% for field in postForm %}
-        {{ field }} <br />
-    {% endfor %}
-    {{ formset.management_form }}
-    {% for form in formset %}
-        {{ form }}
-    {% endfor %}
-    <input type="submit" name="submit" value="Submit" />
-</form>
+<a href="{% url 'upload' %}">Upload new</a>
+
+{% for image in images %}
+
+{% for plant in plants %}
+
+<h1>uploaded by - {{plant.user}} price is - {{plant.price}} - {{plant.id}}</h1>
+<a href="{% url 'edit' key=image.pk %}">Edit</a>
+<a href="{% url 'delete' key=image.pk key1=plant.id %}">Delete</a>
+<img src="{{ image.image.url }}">
+{% endfor %}
+{% endfor %}

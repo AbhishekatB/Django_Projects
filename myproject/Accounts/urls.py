@@ -2,7 +2,7 @@ from django.urls import path
 from .import  views
 from django.conf import settings
 from django.conf.urls.static import static
-
+from django.conf.urls import url
 
 
 
@@ -17,6 +17,9 @@ urlpatterns=[
      path('logout/',views.logout_view, name='logout'),
      path('homepage/',views.homepage, name='homepage'),
      path('post/',views.post,name='post'),
+     path('edit/<int:key>/',views.edit, name='edit'),
+     path('delete/<int:key>/<int:key1>/',views.delete, name='delete'),
+     path('upload/',views.upload,name='upload')
 ]
 
 

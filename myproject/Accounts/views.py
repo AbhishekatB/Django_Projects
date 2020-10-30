@@ -18,7 +18,6 @@ class customer_register(CreateView):
     model = User
     form_class = CustomerSignUpForm
     template_name = 'customer_register.html'
-
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
@@ -33,7 +32,6 @@ class manager_register(CreateView):
         user = form.save()
         login(self.request, user)
         return redirect('post')
-
 
 def login_request(request):
     if request.method=='POST':
@@ -77,19 +75,14 @@ def landingpage(request):
 
 def post(request):
     ImageFormSet = modelformset_factory(Images,form=ImageForm, extra=1)
-    print(request.user,'natukodi')
     if request.method == 'POST':
-        print(request.POST)
         request.POST._mutable = True  
         request.POST['user'] = request.user
         request.POST._mutable = False
         postForm = PlantForm(request.POST)
-        print(postForm)
         formset = ImageFormSet(request.POST, request.FILES,queryset=Images.objects.none())
-        print(postForm.is_valid(),formset.is_valid())
         if postForm.is_valid() and formset.is_valid():
             post_form = postForm.save(commit=False)
-            print(request.user)
             a = Nursery_Manager.objects.get(user=request.user)
             post_form.user = a
             post_form.save()
@@ -98,22 +91,88 @@ def post(request):
                 photo = Images(plant=post_form, image=image)
                 photo.save()
             messages.success(request,"Posted!")
-            return HttpResponseRedirect("/")
+            return redirect("post")
         else:
-            print (postForm.errors, formset.errors,'hi')
+            print (postForm.errors, formset.errors)
     else:
         postForm = PlantForm()
         formset = ImageFormSet(queryset=Images.objects.none())
-    return render(request, 'Manager_home.html',{'postForm': postForm, 'formset': formset})
+    a = Nursery_Manager.objects.get(user=request.user)
+    plants = Plants.objects.filter(user=a)
+    k = []
+    for i in plants:
+        if Images.objects.filter(pk=i.id):
+            k.append(i.id)
+    print(k)
+    images = Images.objects.filter(pk__in=k)
+    print(images)
+    for i in images:
+        print(i.id)
+    return render(request, 'Manager_home.html',{'postForm': postForm, 'formset': formset,'plants':plants,'images':images})
 
 
+def edit(request,key):
+    ImageFormSet = modelformset_factory(Images,form=ImageForm, extra=1)
+    post = Plants.objects.filter(pk=key).first()
+    if request.method == 'POST':
+        request.POST._mutable = True  
+        request.POST['user'] = request.user
+        request.POST._mutable = False
+        postForm = PlantForm(request.POST,instance=post)
+        #imageForm = ImageForm(request.POST,instance=post)
+        formset = ImageFormSet(request.POST, request.FILES)
+        #print(formset)
+       # v = Images.objects.filter(plant=post)
+        #print(v)
+        if postForm.is_valid() and formset.is_valid():
+            post_form = postForm.save(commit=False)
+            a = Nursery_Manager.objects.get(user=request.user)
+            post_form.user = a
+            post_form.save()
+            for form in formset.cleaned_data:
+                image = form['image']
+                print(image)
+                print(post_form.id,key)
+                photo = Images(id=post_form.id, plant=post_form,image=image)
+                photo.save()
+            messages.success(request,"Posted!")
+            return redirect("post")
+        else:
+            print (postForm.errors, formset.errors)
+    else:
+        postForm = PlantForm()
+        formset = ImageFormSet(queryset=Images.objects.none())
+    return render(request, 'edit.html',{'postForm': postForm, 'formset': formset})
 
-'''
-<QueryDict: {'csrfmiddlewaretoken': ['Nwd9ScVY4xlp9jtse78hJNFL8nKTkGVbI6i5yzAp0htsIo1R49TmJoDz164NB6EN'], 'user': ['user', 'user'],
- 'price': ['15'],'form-TOTAL_FORMS': ['1'], 'form-INITIAL_FORMS': ['0'], 'form-MIN_NUM_FORMS': ['0'],
- 'form-MAX_NUM_FORMS': ['1000'], 'form-0-id': [''], 'submit': ['Submit']}>
-<tr><th><label for="id_price">Price:</label></th><td><input type="text" name="price" value="15" maxlength="4" required id="id_price">
-<input type="hidden" name="user" value="Manager1" id="id_user"></td></tr>
 
-True True
-Manager1'''
+def delete(request,key,key1):
+    Images.objects.filter(id=key).delete()
+    Plants.objects.filter(pk=key1).delete()
+    return render(request,'Manager_home.html')
+
+
+def upload(request):
+    ImageFormSet = modelformset_factory(Images,form=ImageForm, extra=1)
+    if request.method == 'POST':
+        request.POST._mutable = True  
+        request.POST['user'] = request.user
+        request.POST._mutable = False
+        postForm = PlantForm(request.POST)
+        formset = ImageFormSet(request.POST, request.FILES,queryset=Images.objects.none())
+        if postForm.is_valid() and formset.is_valid():
+            post_form = postForm.save(commit=False)
+            a = Nursery_Manager.objects.get(user=request.user)
+            post_form.user = a
+            post_form.save()
+            for form in formset.cleaned_data:
+                image = form['image']
+                photo = Images(plant=post_form, image=image)
+                photo.save()
+            messages.success(request,"Posted!")
+            return redirect("post")
+        else:
+            print (postForm.errors, formset.errors)
+    else:
+        postForm = PlantForm()
+        formset = ImageFormSet(queryset=Images.objects.none())
+    return render(request, 'Manager_home1.html',{'postForm': postForm, 'formset': formset})
